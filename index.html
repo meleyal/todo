@@ -20,7 +20,6 @@
   createApp({
     setup() {
       const newTodoText = ref("");
-      const editedTodo = ref();
       const day = new Date().toLocaleDateString("en-us", { weekday: "long" });
       const todos = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
       const total = computed(() => filters.all(todos.value).length);
@@ -39,25 +38,6 @@
             done: false,
           });
           e.target.value = "";
-        }
-      }
-
-      let beforeEditCache = "";
-      function editTodo(todo) {
-        beforeEditCache = todo.text;
-        editedTodo.value = todo;
-      }
-
-      function cancelEdit(todo) {
-        editedTodo.value = null;
-        todo.text = beforeEditCache;
-      }
-
-      function doneEdit(todo) {
-        if (editedTodo.value) {
-          editedTodo.value = null;
-          todo.text = todo.text.trim();
-          if (!todo.text) removeTodo(todo);
         }
       }
 
@@ -90,14 +70,10 @@
       return {
         day,
         todos,
-        addTodo,
-        editedTodo,
-        editTodo,
-        doneEdit,
-        cancelEdit,
-        clearDone,
         total,
         progress,
+        addTodo,
+        clearDone,
         startDrag,
         onDrop,
       };
@@ -131,27 +107,7 @@
       draggable="true"
       @dragstart="startDrag($event, todo)"
     >
-      <div class="no-drag">
-        <input type="checkbox" v-model="todo.done" />&nbsp;
-
-        <label
-          @dblclick="editTodo(todo)"
-          class="text"
-          :class="{ editing: todo === editedTodo }"
-          >{{ todo.text }}</label
-        >
-
-        <input
-          v-if="todo === editedTodo"
-          class="edit"
-          type="text"
-          v-model="todo.text"
-          @vue:mounted="({ el }) => el.focus()"
-          @blur="doneEdit(todo)"
-          @keyup.enter="doneEdit(todo)"
-          @keyup.escape="cancelEdit(todo)"
-        />
-      </div>
+      <input type="checkbox" v-model="todo.done" />&nbsp; {{todo.text}}
     </li>
   </ul>
 
@@ -218,14 +174,6 @@
     &.done {
       text-decoration: line-through;
       opacity: 0.2;
-    }
-
-    .no-drag {
-      pointer-events: none;
-    }
-
-    .text.editing {
-      display: none;
     }
   }
   footer {
